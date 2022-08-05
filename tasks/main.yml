@@ -1,0 +1,185 @@
+---
+  - name: Refresh subscription manager
+    command: subscription-manager refresh 
+
+  - name: Install bind-utils
+    ansible.builtin.yum:
+      name: "{{ packages }}"
+      state: latest
+    vars:
+      packages:
+      - bind
+      - bind-utils
+
+  - name: named started enabled
+    service:
+      name: named
+      state: started
+
+  - name: named 
+    service:
+      name: named
+      enabled: yes
+
+  - name: Remove file /etc/named.conf
+    ansible.builtin.file:
+      path: /etc/named.conf
+      state: absent
+
+  - name: adding foward zone and back zone to named.conf
+    ansible.builtin.blockinfile:
+      insertafter: EOF
+      create: yes
+      marker: "// from ansible"
+      path: /etc/named.conf
+      block: |
+        //
+        // named.conf
+        //
+        // Provided by Red Hat bind package to configure the ISC BIND named(8) DNS
+        // server as a caching only nameserver (as a localhost DNS resolver only).
+        //
+        // See /usr/share/doc/bind*/sample/ for example named configuration files.
+        //
+        // See the BIND Administrator's Reference Manual (ARM) for details about the
+        // configuration located in /usr/share/doc/bind-{version}/Bv9ARM.html
+        options {
+        //      listen-on port 53 { 127.0.0.1; };
+        //      listen-on-v6 port 53 { ::1; };
+                directory       "/var/named";
+                dump-file       "/var/named/data/cache_dump.db";
+                statistics-file "/var/named/data/named_stats.txt";
+                memstatistics-file "/var/named/data/named_mem_stats.txt";
+                recursing-file  "/var/named/data/named.recursing";
+                secroots-file   "/var/named/data/named.secroots";
+                allow-query     { localhost; 10.0.0.0/24; };
+                /*
+                - If you are building an AUTHORITATIVE DNS server, do NOT enable recursion.
+                - If you are building a RECURSIVE (caching) DNS server, you need to enable
+                  recursion.
+                - If your recursive DNS server has a public IP address, you MUST enable access
+                  control to limit queries to your legitimate users. Failing to do so will
+                  cause your server to become part of large scale DNS amplification
+                  attacks. Implementing BCP38 within your network would greatly
+                  reduce such attack surface
+                */
+                recursion yes;
+                dnssec-enable yes;
+                dnssec-validation yes;
+                /* Path to ISC DLV key */
+                bindkeys-file "/etc/named.root.key";
+                managed-keys-directory "/var/named/dynamic";
+                pid-file "/run/named/named.pid";
+                session-keyfile "/run/named/session.key";
+        };
+        logging {
+                channel default_debug {
+                        file "data/named.run";
+                        severity dynamic;
+                };
+        };
+        zone "." IN {
+                type hint;
+                file "named.ca";
+        };
+        include "/etc/named.rfc1912.zones";
+        include "/etc/named.root.key";
+        //foward zone
+        zone "kalem.local" IN {
+                type master;
+                file "kalem.local.db";
+                allow-update { none; };
+                allow-query { any; };
+        };
+        //back zone
+        zone "0.0.10.in-addr.arpa" IN {
+                type master;
+                file "kalem.local.rev";
+                allow-update { none; };
+                allow-query { any; };
+        };
+
+  - name: "writting the file /var/named/{{ DOMAIN_NAME }}.db"
+    blockinfile:
+      dest: /var/named/{{ DOMAIN_NAME }}.db
+      insertafter: EOF
+      marker: ";from ansible"
+      create: yes
+      block: |
+        $TTL 86400
+        @ IN SOA dns-primary.kalem.local. admin.kalem.local. (
+            2019061800 ;Serial
+            3600 ;Refresh
+            1800 ;Retry
+            604800 ;Expire
+            86400 ;Minimum TTL
+        )
+        ;Name Server Information
+        @ IN NS dns-primary.kalem.local.
+        ;IP for Name Server
+        dns-primary IN A 10.0.0.3
+        ;A Record for IP address to Hostname 
+        dhcp IN A 10.0.0.2
+        gateway IN A 10.0.0.1
+
+  - name: "writting the file /var/named/{{ DOMAIN_NAME }}.rev"
+    blockinfile:
+      dest: /var/named/{{ DOMAIN_NAME }}.rev
+      insertafter: EOF
+      marker: ";from ansible"
+      create: yes
+      block: |
+        $TTL 86400
+        @ IN SOA dns-primary.kalem.local. admin.kalem.local. (
+            2019061800 ;Serial
+            3600 ;Refresh
+            1800 ;Retry
+            604800 ;Expire
+            86400 ;Minimum TTL
+        )
+        ;Name Server Information
+        @ IN NS dns-primary.kalem.local.
+        ;Reverse lookup for Name Server
+        3 IN PTR dns-primary.kalem.local.
+        ;PTR Record IP address to HostName
+        2 IN PTR dhcp.kalem.local.
+        1 IN PTR gateway.kalem.local.
+
+
+  - name: Allow named to have access to {{ DOMAIN_NAME }}.db
+    command: chown :named /var/named/{{ DOMAIN_NAME }}.db
+
+  - name: permissions
+    command: chown :named /var/named/{{ DOMAIN_NAME }}.rev
+
+  - name: .rev files
+    command: named-checkzone {{ DNS_IP }} /var/named/{{ DOMAIN_NAME }}.rev
+
+  - name: .db files 
+    command: named-checkzone {{ DOMAIN_NAME }} /var/named/{{ DOMAIN_NAME }}.db
+
+  - name: restart named
+    service:
+      name: named
+      state: restarted
+
+  - ansible.posix.firewalld:
+      service: dns
+      permanent: yes
+      state: enabled
+
+  - name: reload firewall
+    command: firewall-cmd --reload
+
+  - name: "Setting dns within /etc/sysconfig/network-scripts/ifcfg-ens224"
+    lineinfile:
+      dest: "/etc/sysconfig/network-scripts/ifcfg-ens224"
+      insertafter: EOF
+      line: "{{ DNS_IP }}"
+ 
+  - name: reloading network
+    service:
+      name: network
+      state: restarted
+
+
