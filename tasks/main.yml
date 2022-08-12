@@ -52,7 +52,7 @@
                 memstatistics-file "/var/named/data/named_mem_stats.txt";
                 recursing-file  "/var/named/data/named.recursing";
                 secroots-file   "/var/named/data/named.secroots";
-                allow-query     { localhost; 10.0.0.0/24; };
+                allow-query     { localhost; {{SUBNET}}/24; };
                 /*
                 - If you are building an AUTHORITATIVE DNS server, do NOT enable recursion.
                 - If you are building a RECURSIVE (caching) DNS server, you need to enable
@@ -182,9 +182,6 @@
         DOMAIN={{ DOMAIN_NAME }}
         DNS1={{ DNS_IP }}
       insertafter: EOF
- 
-  - name: reloading network
-    command: systemctl restart network
   
   - name: down
     command: ifdown ens192
