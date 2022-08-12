@@ -11,10 +11,10 @@
       - bind
       - bind-utils
 
-  - name: named started enabled
-    service:
-      name: named
-      state: started
+  # - name: named started enabled
+  #   service:
+  #     name: named
+  #     state: started
 
   - name: named 
     service:
@@ -146,18 +146,20 @@
         1 IN PTR gateway.{{ DOMAIN_NAME }}.
 
 
-  - name: Allow named to have access to {{ DOMAIN_NAME }}.db
-    command: chown :named /var/named/{{ DOMAIN_NAME }}.db
+  # - name: Allow named to have access to {{ DOMAIN_NAME }}.db
+  #   command: chown :named /var/named/{{ DOMAIN_NAME }}.db
 
-  - name: permissions
-    command: chown :named /var/named/{{ DOMAIN_NAME }}.rev
-
-  - name: .rev files
-    command: named-checkzone {{ DNS_IP }} /var/named/{{ DOMAIN_NAME }}.rev
+  - name: Change file ownership to named for db
+    ansible.builtin.file:
+      path: /var/named/{{ domain_name }}.{{ domain_name_extension }}.rev 
+      group: named 
 
   - name: .db files 
     command: named-checkzone {{ DOMAIN_NAME }} /var/named/{{ DOMAIN_NAME }}.db
 
+  - name: .rev files
+    command: named-checkzone {{ DNS_IP }} /var/named/{{ DOMAIN_NAME }}.rev
+    
   - name: restart named
     service:
       name: named
@@ -185,5 +187,8 @@
     service:
       name: network
       state: restarted
+  
+  - name: down
+    command: ifdown ens192
 
 
