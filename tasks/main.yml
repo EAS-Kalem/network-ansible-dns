@@ -151,7 +151,7 @@
 
   - name: Change file ownership to named for db
     ansible.builtin.file:
-      path: /var/named/{{ domain_name }}.{{ domain_name_extension }}.rev 
+      path: /var/named/{{ DOMAIN_NAME }}.rev 
       group: named 
 
   - name: .db files 
