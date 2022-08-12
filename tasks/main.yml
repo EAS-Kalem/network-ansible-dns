@@ -184,9 +184,7 @@
       insertafter: EOF
  
   - name: reloading network
-    service:
-      name: network
-      state: restarted
+    command: systemctl restart network
   
   - name: down
     command: ifdown ens192
