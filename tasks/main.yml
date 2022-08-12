@@ -85,16 +85,16 @@
         include "/etc/named.rfc1912.zones";
         include "/etc/named.root.key";
         //foward zone
-        zone "kalem.local" IN {
+        zone "{{DOMAIN_NAME}}" IN {
                 type master;
-                file "kalem.local.db";
+                file "{{DOMAIN_NAME}}.db";
                 allow-update { none; };
                 allow-query { any; };
         };
         //back zone
         zone "0.0.10.in-addr.arpa" IN {
                 type master;
-                file "kalem.local.rev";
+                file "{{DOMAIN_NAME}}.rev";
                 allow-update { none; };
                 allow-query { any; };
         };
@@ -107,7 +107,7 @@
       create: yes
       block: |
         $TTL 86400
-        @ IN SOA dns-primary.kalem.local. admin.kalem.local. (
+        @ IN SOA dns-primary.{{DOMAIN_NAME}}. admin.{{DOMAIN_NAME}}. (
             2019061800 ;Serial
             3600 ;Refresh
             1800 ;Retry
@@ -115,12 +115,12 @@
             86400 ;Minimum TTL
         )
         ;Name Server Information
-        @ IN NS dns-primary.kalem.local.
+        @ IN NS dns-primary.{{DOMAIN_NAME}}.
         ;IP for Name Server
-        dns-primary IN A 10.0.0.3
+        dns-primary IN A {{DNS_IP}}
         ;A Record for IP address to Hostname 
-        dhcp IN A 10.0.0.2
-        gateway IN A 10.0.0.1
+        dhcp IN A {{DHCP_IP}}
+        gateway IN A {{GW_IP}}
 
   - name: "writting the file /var/named/{{ DOMAIN_NAME }}.rev"
     blockinfile:
@@ -130,7 +130,7 @@
       create: yes
       block: |
         $TTL 86400
-        @ IN SOA dns-primary.kalem.local. admin.kalem.local. (
+        @ IN SOA dns-primary.{{ DOMAIN_NAME }}. admin.{{ DOMAIN_NAME }}. (
             2019061800 ;Serial
             3600 ;Refresh
             1800 ;Retry
@@ -138,12 +138,12 @@
             86400 ;Minimum TTL
         )
         ;Name Server Information
-        @ IN NS dns-primary.kalem.local.
+        @ IN NS dns-primary.{{ DOMAIN_NAME }}.
         ;Reverse lookup for Name Server
-        3 IN PTR dns-primary.kalem.local.
+        3 IN PTR dns-primary.{{ DOMAIN_NAME }}.
         ;PTR Record IP address to HostName
-        2 IN PTR dhcp.kalem.local.
-        1 IN PTR gateway.kalem.local.
+        2 IN PTR dhcp.{{ DOMAIN_NAME }}.
+        1 IN PTR gateway.{{ DOMAIN_NAME }}.
 
 
   - name: Allow named to have access to {{ DOMAIN_NAME }}.db
@@ -172,10 +172,14 @@
     command: firewall-cmd --reload
 
   - name: "Setting dns within /etc/sysconfig/network-scripts/ifcfg-ens224"
-    lineinfile:
+    blockinfile:
       dest: "/etc/sysconfig/network-scripts/ifcfg-ens224"
+      block: |
+        DEFROUTE=YES
+        GATEWAY={{ GW_IP}}
+        DOMAIN={{ DOMAIN_NAME }}
+        DNS1={{ DNS_IP }}
       insertafter: EOF
-      line: "{{ DNS_IP }}"
  
   - name: reloading network
     service:
