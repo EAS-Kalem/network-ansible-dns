@@ -183,7 +183,3 @@
         DNS1={{ DNS_IP }}
       insertafter: EOF
   
-  - name: down
-    command: ifdown ens192
-
-
