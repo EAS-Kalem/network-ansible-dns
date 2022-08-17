@@ -180,6 +180,6 @@
         DEFROUTE=YES
         GATEWAY={{ GW_IP}}
         DOMAIN={{ DOMAIN_NAME }}
-        DNS1={{ DNS_IP }}
+        DNS={{ DNS_IP }}
       insertafter: EOF
   
