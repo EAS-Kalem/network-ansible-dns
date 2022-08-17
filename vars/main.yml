@@ -4,9 +4,9 @@ SUBNET: 10.0.0.0
 RANGE: 10.0.0.10 10.0.0.50
 in_interface: ens224
 out_interface: ens192
-GW_MAC: "{{ hostvars['kalem-gateway'].ansible_ens224.macaddress }}"
+GW_MAC: "{{ hostvars['gateway'].ansible_ens224.macaddress }}"
 GW_IP: 10.0.0.1    
-DHCP_MAC: "{{ hostvars['kalem-dhcp'].ansible_ens224.macaddress }}"   
+DHCP_MAC: "{{ hostvars['dhcp'].ansible_ens224.macaddress }}"   
 DHCP_IP: 10.0.0.2 
-DNS_MAC: "{{ hostvars['kalem-dns'].ansible_ens224.macaddress }}"   
+DNS_MAC: "{{ hostvars['dns-primary'].ansible_ens224.macaddress }}"   
 DNS_IP: 10.0.0.3
