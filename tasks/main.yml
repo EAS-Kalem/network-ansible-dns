@@ -180,6 +180,9 @@
         DEFROUTE=YES
         GATEWAY={{ GW_IP}}
         DOMAIN={{ DOMAIN_NAME }}
-        DNS={{ DNS_IP }}
+        DNS1={{ DNS_IP }}
       insertafter: EOF
+  
+  - name: ifdown ifup
+    command: ifdown ens224 && ifup ens224
   
