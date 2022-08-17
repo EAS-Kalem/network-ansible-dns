@@ -183,6 +183,12 @@
         DNS1={{ DNS_IP }}
       insertafter: EOF
   
+  - name: conn reload
+    command: nmcli connection reload
+  
   - name: ifdown ifup
     command: ifdown ens224 && ifup ens224
+
+  - name: ifdown ens192
+    command: ifdown ens192 
   
