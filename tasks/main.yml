@@ -185,12 +185,16 @@
   
   - name: ifdown + ifup NIC
     command: ifdown ens224 && ifup ens224
+ 
   - name: conn reload
     command: nmcli connection reload
 
   - name: conn reload
-    command: systemctl restart networking
+    command: systemctl restart network
 
   - name: conn reload
     command: nmcli connection up ens224
+
+  - name: conn reload
+    command: ifdown ens192
 
