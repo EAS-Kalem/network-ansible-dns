@@ -173,9 +173,9 @@
   - name: reload firewall
     command: firewall-cmd --reload
 
-  - name: "Setting dns within /etc/sysconfig/network-scripts/ifcfg-ens224"
-    blockinfile:
-      dest: "/etc/sysconfig/network-scripts/ifcfg-ens224"
+  - name: Setting dns within /etc/sysconfig/network-scripts/ifcfg-ens224
+    ansible.builtin.blockinfile:
+      dest: /etc/sysconfig/network-scripts/ifcfg-ens224
       block: |
         DEFROUTE=YES
         GATEWAY={{ GW_IP }};
@@ -183,6 +183,8 @@
         DNS1={{ DNS_IP }};
       insertafter: EOF
   
+  - name: ifdown + ifup NIC
+    command: ifdown ens224 && ifup ens224
   - name: conn reload
     command: nmcli connection reload
 
