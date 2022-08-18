@@ -178,14 +178,11 @@
       dest: "/etc/sysconfig/network-scripts/ifcfg-ens224"
       block: |
         DEFROUTE=YES
-        GATEWAY={{ GW_IP}}
-        DOMAIN={{ DOMAIN_NAME }}
-        DNS1={{ DNS_IP }}
+        GATEWAY={{ GW_IP }};
+        DOMAIN={{ DOMAIN_NAME }};
+        DNS1={{ DNS_IP }};
       insertafter: EOF
   
   - name: conn reload
     command: nmcli connection reload
 
-  - name: ifdown ens192
-    command: ifdown ens192 
-  
