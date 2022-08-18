@@ -187,5 +187,8 @@
     command: nmcli connection reload
 
   - name: conn reload
+    command: systemctl restart networking
+
+  - name: conn reload
     command: nmcli connection up ens224
 
