@@ -145,7 +145,6 @@
         2 IN PTR dhcp.{{ DOMAIN_NAME }}.
         1 IN PTR gateway.{{ DOMAIN_NAME }}.
 
-
   # - name: Allow named to have access to {{ DOMAIN_NAME }}.db
   #   command: chown :named /var/named/{{ DOMAIN_NAME }}.db
 
@@ -195,10 +194,6 @@
   - name: conn reload
     command: nmcli connection up ens224
 
-  - name: conn reload
-    command: ifdown ens192
 
-  - name: conn reload
-    command: route add default gw 10.0.0.1 dev vmnet0:1
 
 
